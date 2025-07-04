@@ -1,0 +1,144 @@
+import pygame
+import time
+import random
+
+# पायगेम इनिशियलाइज़ करें
+pygame.init()
+
+# स्क्रीन सेटअप (400x400 पिक्सल)
+screen_width = 400
+screen_height = 400
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("स्नेक गेम - बनाया आपके लिए!")
+
+# रंग डिफाइन करें (RGB)
+white = (255, 255, 255)
+black = (0, 0, 0)
+red = (213, 50, 80)
+green = (0, 255, 0)
+blue = (50, 153, 213)
+
+# स्नेक और खाने (फूड) का साइज़
+snake_block = 10
+snake_speed = 15
+
+# स्कोर दिखाने का फंक्शन
+def show_score(score):
+    font = pygame.font.SysFont("comicsansms", 20)
+    value = font.render(f"स्कोर: {score}", True, black)
+    screen.blit(value, [10, 10])
+
+# स्नेक ड्रॉ करने का फंक्शन
+def our_snake(snake_block, snake_list):
+    for x in snake_list:
+        pygame.draw.rect(screen, green, [x[0], x[1], snake_block, snake_block])
+
+# मैसेज दिखाने का फंक्शन
+def message(msg, color):
+    font = pygame.font.SysFont("comicsansms", 25)
+    mesg = font.render(msg, True, color)
+    screen.blit(mesg, [screen_width / 6, screen_height / 3])
+
+# मेन गेम लूप
+def gameLoop():
+    game_over = False
+    game_close = False
+
+    # स्नेक की शुरुआती पोजीशन
+    x1 = screen_width / 2
+    y1 = screen_height / 2
+
+    # स्नेक मूवमेंट के लिए वेरिएबल
+    x1_change = 0
+    y1_change = 0
+
+    # स्नेक बॉडी (शुरुआत में सिर्फ 1 ब्लॉक)
+    snake_list = []
+    length_of_snake = 1
+
+    # फूड की रैंडम पोजीशन
+    foodx = round(random.randrange(0, screen_width - snake_block) / 10.0) * 10.0
+    foody = round(random.randrange(0, screen_height - snake_block) / 10.0) * 10.0
+
+    while not game_over:
+
+        while game_close == True:
+            screen.fill(white)
+            message("गेम ओवर! Q-बंद करें या C-फिर से खेलें", red)
+            show_score(length_of_snake - 1)
+            pygame.display.update()
+
+            # कीबोर्ड इनपुट चेक करें (फिर से खेलें या बंद करें)
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        game_over = True
+                        game_close = False
+                    if event.key == pygame.K_c:
+                        gameLoop()
+
+        # कीबोर्ड इनपुट (एरो कीज़ से मूवमेंट)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_over = True
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    x1_change = -snake_block
+                    y1_change = 0
+                elif event.key == pygame.K_RIGHT:
+                    x1_change = snake_block
+                    y1_change = 0
+                elif event.key == pygame.K_UP:
+                    y1_change = -snake_block
+                    x1_change = 0
+                elif event.key == pygame.K_DOWN:
+                    y1_change = snake_block
+                    x1_change = 0
+
+        # अगर स्नेक स्क्रीन के बाहर चला जाए तो गेम ओवर
+        if x1 >= screen_width or x1 < 0 or y1 >= screen_height or y1 < 0:
+            game_close = True
+
+        # स्नेक की पोजीशन अपडेट करें
+        x1 += x1_change
+        y1 += y1_change
+        screen.fill(white)
+
+        # फूड ड्रॉ करें
+        pygame.draw.rect(screen, red, [foodx, foody, snake_block, snake_block])
+
+        # स्नेक की बॉडी बनाएँ
+        snake_head = []
+        snake_head.append(x1)
+        snake_head.append(y1)
+        snake_list.append(snake_head)
+
+        # अगर स्नेक की लंबाई बढ़ गई हो, तो एक्स्ट्रा ब्लॉक्स डिलीट करें
+        if len(snake_list) > length_of_snake:
+            del snake_list[0]
+
+        # अगर स्नेक खुद से टकराए तो गेम ओवर
+        for x in snake_list[:-1]:
+            if x == snake_head:
+                game_close = True
+
+        # स्नेक और स्कोर ड्रॉ करें
+        our_snake(snake_block, snake_list)
+        show_score(length_of_snake - 1)
+
+        pygame.display.update()
+
+        # अगर स्नेक ने फूड खा लिया तो नया फूड जनरेट करें और स्नेक की लंबाई बढ़ाएँ
+        if x1 == foodx and y1 == foody:
+            foodx = round(random.randrange(0, screen_width - snake_block) / 10.0) * 10.0
+            foody = round(random.randrange(0, screen_height - snake_block) / 10.0) * 10.0
+            length_of_snake += 1
+
+        # गेम की स्पीड कंट्रोल करें
+        time.sleep(0.1)
+
+    pygame.quit()
+    quit()
+
+# गेम शुरू करें!
+gameLoop()
